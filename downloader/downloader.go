@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jesee-kuya/wget/logger"
+	"github.com/jesee-kuya/wget/util"
 )
 
 func DownloadFile(url string, opts Options, log *logger.Logger) error {
@@ -28,9 +29,9 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 	// Build file path
 	filename := opts.OutputName
 	if filename == "" {
-		filename = utils.ExtractFilenameFromURL(url)
+		filename = util.ExtractFilenameFromURL(url)
 	}
-	outputPath := filepath.Join(utils.FallbackDir(opts.OutputDir), filename)
+	outputPath := filepath.Join(util.FallbackDir(opts.OutputDir), filename)
 	log.SavingTo(outputPath)
 
 	// Create file
