@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/jesee-kuya/wget/logger"
 )
 
 func DownloadFile(url string, opts Options, log *logger.Logger) error {
