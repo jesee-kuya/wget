@@ -53,7 +53,6 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 		start   = time.Now()
 	)
 
-	// Define a multi-reader that logs progress concurrently
 	for {
 		n, readErr := resp.Body.Read(buf)
 		if n > 0 {
