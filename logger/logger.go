@@ -26,3 +26,8 @@ func (l *Logger) Info(msg string) {
 func (l *Logger) Error(msg string, err error) {
 	l.writer.Printf("ERROR: %s: %v", msg, err)
 }
+
+// Progress logs download progress
+func (l *Logger) Progress(bytesDownloaded, totalBytes int64, url string) {
+	l.writer.Printf("PROGRESS: Downloaded %d/%d bytes from %s", bytesDownloaded, totalBytes, url)
+}
