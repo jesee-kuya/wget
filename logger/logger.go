@@ -16,3 +16,8 @@ func NewLogger(w io.Writer) *Logger {
 		writer: log.New(w, "WGET: ", log.LstdFlags),
 	}
 }
+
+// Info logs informational messages
+func (l *Logger) Info(msg string) {
+	l.writer.Printf("INFO: %s", msg)
+}
