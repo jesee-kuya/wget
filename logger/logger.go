@@ -21,3 +21,8 @@ func NewLogger(w io.Writer) *Logger {
 func (l *Logger) Info(msg string) {
 	l.writer.Printf("INFO: %s", msg)
 }
+
+// Error logs error messages
+func (l *Logger) Error(msg string, err error) {
+	l.writer.Printf("ERROR: %s: %v", msg, err)
+}
