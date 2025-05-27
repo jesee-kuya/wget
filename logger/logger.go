@@ -28,3 +28,16 @@ func (l *Logger) Start(url string, timestamp time.Time) {
 	fmt.Fprintf(l.Output, "start at %s\n", timestamp.Format("2006-01-02 15:04:05"))
 	fmt.Fprintf(l.Output, "sending request, awaiting response... ")
 }
+
+// SavingTo logs the path where the file is being saved.
+func (l *Logger) SavingTo(path string) {
+	fmt.Fprintf(l.Output, "saving file to: %s\n", path)
+}
+
+// ContentInfo logs the size of the content being downloaded.
+func (l *Logger) ContentInfo(size int64) {
+	sizeMB := float64(size) / (1024 * 1024)
+	fmt.Fprintf(l.Output, "content size: %d [~%.2fMB]\n", size, sizeMB)
+}
+
+
