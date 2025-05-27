@@ -40,4 +40,7 @@ func (l *Logger) ContentInfo(size int64) {
 	fmt.Fprintf(l.Output, "content size: %d [~%.2fMB]\n", size, sizeMB)
 }
 
-
+// Error logs an error message.
+func (l *Logger) Error(err error) {
+	fmt.Fprintf(l.Output, "error: %v\n", err)
+}
