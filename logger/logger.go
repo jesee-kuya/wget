@@ -2,31 +2,13 @@ package logger
 
 import (
 	"io"
-	"log"
 )
 
 type Logger struct {
-    Output io.Writer 
+	Output io.Writer
 }
 
 // NewLogger creates a new Logger instance with the specified writer
-func NewLogger(w io.Writer) *Logger {
-	return &Logger{
-		writer: log.New(w, "WGET: ", log.LstdFlags),
-	}
-}
-
-// Info logs informational messages
-func (l *Logger) Info(msg string) {
-	l.writer.Printf("INFO: %s", msg)
-}
-
-// Error logs error messages
-func (l *Logger) Error(msg string, err error) {
-	l.writer.Printf("ERROR: %s: %v", msg, err)
-}
-
-// Progress logs download progress
-func (l *Logger) Progress(bytesDownloaded, totalBytes int64, url string) {
-	l.writer.Printf("PROGRESS: Downloaded %d/%d bytes from %s", bytesDownloaded, totalBytes, url)
+func NewLogger(output io.Writer) *Logger {
+	return &Logger{Output: output}
 }
