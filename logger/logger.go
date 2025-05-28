@@ -34,8 +34,19 @@ func (l *Logger) SavingTo(path string) {
 
 // ContentInfo logs the size of the content being downloaded.
 func (l *Logger) ContentInfo(size int64) {
-	sizeMB := float64(size) / (1024 * 1024)
-	fmt.Fprintf(l.Output, "content size: %d [~%.2fMB]\n", size, sizeMB)
+	const (
+		MB = 1024.0 * 1024.0
+		GB = 1024.0 * 1024.0 * 1024.0
+	)
+
+	var readable string
+	if float64(size) >= GB {
+		readable = fmt.Sprintf("~%.2fGB", float64(size)/GB)
+	} else {
+		readable = fmt.Sprintf("~%.2fMB", float64(size)/MB)
+	}
+
+	fmt.Fprintf(l.Output, "content size: %d [%s]\n", size, readable)
 }
 
 // Error logs an error message.
