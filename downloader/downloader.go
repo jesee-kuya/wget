@@ -21,6 +21,12 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 		log.Error(err)
 		return err
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		err := fmt.Errorf("Bad status from: %s, status code: %d", url, resp.StatusCode)
+		log.Error(err)
+		return err
+	}
 	defer resp.Body.Close()
 
 	log.Status(resp.StatusCode)
