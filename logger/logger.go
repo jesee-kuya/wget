@@ -80,7 +80,7 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 	percentage := (float64(written)/float64(total))*100.0
 }
 
-func etaFormat(eta time.Duration) string{
+func FormatETA(eta time.Duration) string{
 	if eta < time.Second{
 		return "0s"
 	}
