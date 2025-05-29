@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jesee-kuya/wget/util"
@@ -41,24 +42,7 @@ func (l *Logger) ContentInfo(size int64) {
 	fmt.Fprintf(l.Output, "content size: %d [~%s]\n", size, readable)
 }
 
-// ContentSize converts size of the content into GB or MB
-func contentSize(size int64) string {
-	const (
-		KiB = 1024.0
-		MiB = 1024.0 * KiB
-		GiB = 1024.0 * MiB
-	)
 
-	if float64(size) >= GiB {
-		return fmt.Sprintf("%.2fGiB", float64(size)/GiB)
-	} else if float64(size) >= MiB {
-		return fmt.Sprintf("%.2fMiB", float64(size)/MiB)
-	} else if float64(size) >= KiB {
-		return fmt.Sprintf("%.2fKiB", float64(size)/KiB)
-	}
-
-	return fmt.Sprint("%.2fB", float64(size))
-}
 
 // Output the status code of the process
 func (l *Logger) Status(code int) {
@@ -90,8 +74,8 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 		"\r%.2f KiB / %.2f KiB [%s%s] %6.2f%% %s %s",
 		writtenKiB,
 		totalKiB,
-		util.Repeat("=", doneBars),
-		util.Repeat(" ", remainingBars),
+		strings.Repeat("=", doneBars),
+		strings.Repeat(" ", remainingBars),
 		percent*100,
 		speedStr,
 		util.FormatETA(eta),

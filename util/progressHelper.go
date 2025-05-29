@@ -29,3 +29,22 @@ func FormatSpeed(bytesPerSec float64) string {
 	}
 	return fmt.Sprintf("%.2f B/s", bytesPerSec)
 }
+
+// ContentSize converts size of the content into GB or MB
+func ContentSize(size int64) string {
+	const (
+		KiB = 1024.0
+		MiB = 1024.0 * KiB
+		GiB = 1024.0 * MiB
+	)
+
+	if float64(size) >= GiB {
+		return fmt.Sprintf("%.2fGiB", float64(size)/GiB)
+	} else if float64(size) >= MiB {
+		return fmt.Sprintf("%.2fMiB", float64(size)/MiB)
+	} else if float64(size) >= KiB {
+		return fmt.Sprintf("%.2fKiB", float64(size)/KiB)
+	}
+
+	return fmt.Sprintf("%.2fB", float64(size))
+}
