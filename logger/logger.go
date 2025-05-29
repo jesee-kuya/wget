@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/jesee-kuya/wget/util"
 )
 
 type Logger struct {
@@ -69,15 +71,38 @@ func (l *Logger) Status(code int) {
 
 // Output the progress of download
 func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration) {
-	if written < 0 {
-		written = 0
-	}
+	const barWidth = 30
 
-	if speed < 0 {
-		speed = 0
-	}
+	// Calculate human-readable sizes
+	toKiB := func(b int64) float64 { return float64(b) / 1024.0 }
+	writtenKiB := toKiB(written)
+	totalKiB := toKiB(total)
 
-	percentage := (float64(written) / float64(total)) * 100.0
+	// Calculate progress
+	percent := float64(written) / float64(total)
+	if total == 0 {
+		percent = 0
+	}
+	doneBars := int(percent * float64(barWidth))
+	remainingBars := barWidth - doneBars
+
+	// Format speed
+	speedStr := util.FormatSpeed(speed)
+
+	// Print live progress (overwrite line)
+	fmt.Fprintf(l.Output,
+		"\r%.2f KiB / %.2f KiB [%s%s] %6.2f%% %s %s",
+		writtenKiB,
+		totalKiB,
+		util.Repeat("=", doneBars),
+		util.Repeat(" ", remainingBars),
+		percent*100,
+		speedStr,
+		util.FormatETA(eta),
+	)
+	if written == total {
+		fmt.Fprintln(l.Output) // move to new line when done
+	}
 }
 
 // Error logs an error message.
