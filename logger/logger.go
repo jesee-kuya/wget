@@ -38,11 +38,9 @@ func (l *Logger) SavingTo(path string) {
 
 // ContentInfo logs the size of the content being downloaded.
 func (l *Logger) ContentInfo(size int64) {
-	readable := contentSize(size)
+	readable := util.ContentSize(size)
 	fmt.Fprintf(l.Output, "content size: %d [~%s]\n", size, readable)
 }
-
-
 
 // Output the status code of the process
 func (l *Logger) Status(code int) {
