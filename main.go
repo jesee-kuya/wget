@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 
 	"github.com/jesee-kuya/wget/downloader"
 	"github.com/jesee-kuya/wget/logger"
@@ -23,10 +22,13 @@ func main() {
 
 	url := args[0]
 
+	opts := downloader.Options{
+		OutputName: "",
+		OutputDir:  "",
+	}
+
 	if *background {
 		fmt.Println("Output will be written to \"wget-log\".")
-		cmdArgs := append([]string{"wget"}, args...)
-		cmd := exec.Command(os.Args[0], cmdArgs...)
 
 		logFile, err := os.Create("wget-log")
 		if err != nil {
@@ -34,22 +36,19 @@ func main() {
 			return
 		}
 		defer logFile.Close()
-		cmd.Stdout = logFile
-		cmd.Stderr = logFile
-		err = cmd.Start()
+
+		fileLogger := logger.NewLogger(logFile)
+
+		// Perform the download using our downloader
+		err = downloader.DownloadFile(url, opts, fileLogger)
 		if err != nil {
-			fmt.Println("Failed to start background download:", err)
+			fmt.Fprintf(logFile, "Download failed: %v\n", err)
 			return
 		}
 		return
 	}
 
 	log := logger.NewLogger(os.Stdout)
-
-	opts := downloader.Options{
-		OutputName: "",
-		OutputDir:  "",
-	}
 
 	err := downloader.DownloadFile(url, opts, log)
 	if err != nil {
