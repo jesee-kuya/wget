@@ -29,8 +29,3 @@ func FormatSpeed(bytesPerSec float64) string {
 	}
 	return fmt.Sprintf("%.2f B/s", bytesPerSec)
 }
-
-// Repeat returns a string that repeats the first character of the input string `count` times.
-func Repeat(s string, count int) string {
-	return fmt.Sprintf("%s", string([]byte(s)[0])*count)
-}
