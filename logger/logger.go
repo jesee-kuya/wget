@@ -39,57 +39,45 @@ func (l *Logger) ContentInfo(size int64) {
 	fmt.Fprintf(l.Output, "content size: %d [~%s]\n", size, readable)
 }
 
-//ContentSize converts size of the content into GB or MB
-func contentSize(size int64) string{
+// ContentSize converts size of the content into GB or MB
+func contentSize(size int64) string {
 	const (
 		KiB = 1024.0
 		MiB = 1024.0 * KiB
 		GiB = 1024.0 * MiB
 	)
-	
+
 	if float64(size) >= GiB {
 		return fmt.Sprintf("%.2fGiB", float64(size)/GiB)
-	} else if float64(size) >= MiB{
+	} else if float64(size) >= MiB {
 		return fmt.Sprintf("%.2fMiB", float64(size)/MiB)
-	}else if float64(size) >= KiB{
+	} else if float64(size) >= KiB {
 		return fmt.Sprintf("%.2fKiB", float64(size)/KiB)
 	}
-	
+
 	return fmt.Sprint("%.2fB", float64(size))
 }
 
-//Output the status code of the process
-func (l *Logger) Status(code int){
-	status :=http.StatusText(code)
-	if status == ""{
+// Output the status code of the process
+func (l *Logger) Status(code int) {
+	status := http.StatusText(code)
+	if status == "" {
 		status = "Unknown Status"
 	}
-	fmt.Fprintf(l.Output, "sending request, awaiting response... status %d %s\n",code , status)
+	fmt.Fprintf(l.Output, "sending request, awaiting response... status %d %s\n", code, status)
 }
 
-//Output the progress of download
-func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration){
-	if written < 0{
-		written = 0;
+// Output the progress of download
+func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration) {
+	if written < 0 {
+		written = 0
 	}
 
-	if speed < 0{
-		speed = 0;
+	if speed < 0 {
+		speed = 0
 	}
 
-	percentage := (float64(written)/float64(total))*100.0
-}
-
-func FormatETA(eta time.Duration) string{
-	if eta < time.Second{
-		return "0s"
-	}
-
-	seconds := int64(eta.Seconds())
-	if seconds < 60 {
-		return fmt.Sprintf("%ds", seconds)
-	}
-	return (time.Duration(seconds) * time.Second).String()
+	percentage := (float64(written) / float64(total)) * 100.0
 }
 
 // Error logs an error message.
