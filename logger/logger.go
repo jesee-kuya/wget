@@ -73,12 +73,10 @@ func (l *Logger) Status(code int) {
 func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration) {
 	const barWidth = 30
 
-	// Calculate human-readable sizes
 	toKiB := func(b int64) float64 { return float64(b) / 1024.0 }
 	writtenKiB := toKiB(written)
 	totalKiB := toKiB(total)
 
-	// Calculate progress
 	percent := float64(written) / float64(total)
 	if total == 0 {
 		percent = 0
@@ -86,10 +84,8 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 	doneBars := int(percent * float64(barWidth))
 	remainingBars := barWidth - doneBars
 
-	// Format speed
 	speedStr := util.FormatSpeed(speed)
 
-	// Print live progress (overwrite line)
 	fmt.Fprintf(l.Output,
 		"\r%.2f KiB / %.2f KiB [%s%s] %6.2f%% %s %s",
 		writtenKiB,
@@ -101,7 +97,7 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 		util.FormatETA(eta),
 	)
 	if written == total {
-		fmt.Fprintln(l.Output) // move to new line when done
+		fmt.Fprintln(l.Output)
 	}
 }
 
