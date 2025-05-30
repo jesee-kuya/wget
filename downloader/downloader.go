@@ -12,6 +12,7 @@ import (
 	"github.com/jesee-kuya/wget/util"
 )
 
+// DownloadFile downloads a file from the specified URL and saves it to the output directory.
 func DownloadFile(url string, opts Options, log *logger.Logger) error {
 	startTime := time.Now()
 	log.Start(url, startTime)
@@ -21,18 +22,18 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 		log.Error(err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		err := fmt.Errorf("Bad status from: %s, status code: %d", url, resp.StatusCode)
+		err := fmt.Errorf("bad status from: %s, status code: %d", url, resp.StatusCode)
 		log.Error(err)
 		return err
 	}
-	defer resp.Body.Close()
 
 	log.Status(resp.StatusCode)
 	log.ContentInfo(resp.ContentLength)
 
-	// Build file path
+	// Determine output path
 	filename := opts.OutputName
 	if filename == "" {
 		filename = util.ExtractFilenameFromURL(url)
@@ -40,7 +41,6 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 	outputPath := filepath.Join(util.FallbackDir(opts.OutputDir), filename)
 	log.SavingTo(outputPath)
 
-	// Create file
 	outFile, err := os.Create(outputPath)
 	if err != nil {
 		log.Error(err)
@@ -48,33 +48,44 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 	}
 	defer outFile.Close()
 
-	// Progress tracking
 	const bufSize = 32 * 1024
 	buf := make([]byte, bufSize)
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
-	var (
-		written int64
-		start   = time.Now()
-	)
+	var written int64
+	start := time.Now()
+
+	done := make(chan error, 1)
+
+	go func() {
+		for {
+			n, readErr := resp.Body.Read(buf)
+			if n > 0 {
+				nw, writeErr := outFile.Write(buf[:n])
+				if writeErr != nil {
+					done <- writeErr
+					return
+				}
+				if nw != n {
+					done <- io.ErrShortWrite
+					return
+				}
+				written += int64(nw)
+			}
+
+			if readErr != nil {
+				if readErr == io.EOF {
+					done <- nil
+				} else {
+					done <- readErr
+				}
+				return
+			}
+		}
+	}()
 
 	for {
-		n, readErr := resp.Body.Read(buf)
-		if n > 0 {
-			nw, writeErr := outFile.Write(buf[:n])
-			if writeErr != nil {
-				log.Error(writeErr)
-				return writeErr
-			}
-			if nw != n {
-				err := fmt.Errorf("short write: expected %d, wrote %d", n, nw)
-				log.Error(err)
-				return io.ErrShortWrite
-			}
-			written += int64(nw)
-		}
-
 		select {
 		case <-ticker.C:
 			elapsed := time.Since(start).Seconds()
@@ -83,18 +94,14 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 				eta := time.Duration(float64(resp.ContentLength-written)/speed) * time.Second
 				log.Progress(written, resp.ContentLength, speed, eta)
 			}
-		default:
-		}
-
-		if readErr != nil {
-			if readErr == io.EOF {
-				break
+		case err := <-done:
+			if err != nil {
+				log.Error(err)
+				return err
 			}
-			log.Error(readErr)
-			return readErr
+			log.Progress(written, resp.ContentLength, float64(written)/time.Since(start).Seconds(), 0)
+			log.Done(time.Now(), url)
+			return nil
 		}
 	}
-
-	log.Done(time.Now(), url)
-	return nil
 }

@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/jesee-kuya/wget/util"
 )
 
 type Logger struct {
@@ -35,28 +38,49 @@ func (l *Logger) SavingTo(path string) {
 
 // ContentInfo logs the size of the content being downloaded.
 func (l *Logger) ContentInfo(size int64) {
-	const (
-		MB = 1024.0 * 1024.0
-		GB = 1024.0 * 1024.0 * 1024.0
-	)
-
-	var readable string
-	if float64(size) >= GB {
-		readable = fmt.Sprintf("~%.2fGB", float64(size)/GB)
-	} else {
-		readable = fmt.Sprintf("~%.2fMB", float64(size)/MB)
-	}
-
-	fmt.Fprintf(l.Output, "content size: %d [%s]\n", size, readable)
+	readable := util.ContentSize(size)
+	fmt.Fprintf(l.Output, "content size: %d [~%s]\n", size, readable)
 }
 
-//Output the status code of the process
-func (l *Logger) Status(code int){
-	status :=http.StatusText(code)
-	if status == ""{
+// Output the status code of the process
+func (l *Logger) Status(code int) {
+	status := http.StatusText(code)
+	if status == "" {
 		status = "Unknown Status"
 	}
-	fmt.Fprintf(l.Output, "sending request, awaiting response... status %d %s\n",code , status)
+	fmt.Fprintf(l.Output, "sending request, awaiting response... status %d %s\n", code, status)
+}
+
+// Output the progress of download
+func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration) {
+	const barWidth = 30
+
+	toKiB := func(b int64) float64 { return float64(b) / 1024.0 }
+	writtenKiB := toKiB(written)
+	totalKiB := toKiB(total)
+
+	percent := float64(written) / float64(total)
+	if total == 0 {
+		percent = 0
+	}
+	doneBars := int(percent * float64(barWidth))
+	remainingBars := barWidth - doneBars
+
+	speedStr := util.FormatSpeed(speed)
+
+	fmt.Fprintf(l.Output,
+		"\r%.2f KiB / %.2f KiB [%s%s] %6.2f%% %s %s",
+		writtenKiB,
+		totalKiB,
+		strings.Repeat("=", doneBars),
+		strings.Repeat(" ", remainingBars),
+		percent*100,
+		speedStr,
+		util.FormatETA(eta),
+	)
+	if written == total {
+		fmt.Fprintln(l.Output)
+	}
 }
 
 // Error logs an error message.
