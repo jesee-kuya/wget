@@ -11,7 +11,7 @@ import (
 
 func main() {
 	background := flag.Bool("B", false, "Download in background and log output to wget-log")
-
+	output := flag.String("O", "", "Specify file name")
 	flag.Parse()
 	args := flag.Args()
 
@@ -23,7 +23,7 @@ func main() {
 	url := args[0]
 
 	opts := downloader.Options{
-		OutputName: "",
+		OutputName: *output,
 		OutputDir:  "",
 	}
 
