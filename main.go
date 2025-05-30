@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -9,18 +10,45 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "Usage: go run . <url>")
+	background := flag.Bool("B", false, "Download in background and log output to wget-log")
+
+	flag.Parse()
+	args := flag.Args()
+
+	if len(args) == 0 {
+		fmt.Println("Usage: wget [options] <URL>")
 		return
 	}
-	url := os.Args[1]
 
-	log := logger.NewLogger(os.Stdout)
+	url := args[0]
 
 	opts := downloader.Options{
 		OutputName: "",
 		OutputDir:  "",
 	}
+
+	if *background {
+		fmt.Println("Output will be written to \"wget-log\".")
+
+		logFile, err := os.Create("wget-log")
+		if err != nil {
+			fmt.Println("Error creating log file:", err)
+			return
+		}
+		defer logFile.Close()
+
+		fileLogger := logger.NewLogger(logFile)
+
+		// Perform the download using our downloader
+		err = downloader.DownloadFile(url, opts, fileLogger)
+		if err != nil {
+			fmt.Fprintf(logFile, "Download failed: %v\n", err)
+			return
+		}
+		return
+	}
+
+	log := logger.NewLogger(os.Stdout)
 
 	err := downloader.DownloadFile(url, opts, log)
 	if err != nil {
