@@ -25,7 +25,7 @@ func main() {
 
 	opts := downloader.Options{
 		OutputName: *output,
-		OutputDir:  "",
+		OutputDir:  *outputDir,
 	}
 
 	if *background {
