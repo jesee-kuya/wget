@@ -1,9 +1,6 @@
 package util
 
 import (
-	"os"
-	"os/user"
-	"path/filepath"
 	"strings"
 )
 
@@ -14,21 +11,5 @@ func FallbackDir(dir string) string {
 		return "."
 	}
 
-	if strings.HasPrefix(dir, "~") {
-		usr, err := user.Current()
-		if err == nil {
-			dir = filepath.Join(usr.HomeDir, strings.TrimPrefix(dir, "~"))
-		}
-	}
-
-	absPath, err := filepath.Abs(dir)
-	if err != nil {
-		return dir
-	}
-
-	// Create directory if it doesn't exist
-	if _, err := os.Stat(absPath); os.IsNotExist(err) {
-		_ = os.MkdirAll(absPath, 0755)
-	}
-	return absPath
+	return dir
 }
