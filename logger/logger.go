@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -67,9 +68,8 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 	remainingBars := barWidth - doneBars
 
 	speedStr := util.FormatSpeed(speed)
-
-	fmt.Fprintf(l.Output,
-		"\r%.2f KiB / %.2f KiB [%s%s] %6.2f%% %s %s",
+	progressLine := fmt.Sprintf(
+		"%.2f KiB / %.2f KiB [%s%s] %6.2f%% %s %s",
 		writtenKiB,
 		totalKiB,
 		strings.Repeat("=", doneBars),
@@ -78,8 +78,17 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 		speedStr,
 		util.FormatETA(eta),
 	)
-	if written == total {
-		fmt.Fprintln(l.Output)
+
+	// Determine if we should overwrite or write new lines
+	if l.Output == os.Stdout {
+		// Overwrite previous line in terminal
+		fmt.Fprintf(l.Output, "\r%s", progressLine)
+		if written == total {
+			fmt.Fprintln(l.Output) // Final newline after complete
+		}
+	} else {
+		// Append new line in file log
+		fmt.Fprintln(l.Output, progressLine)
 	}
 }
 
