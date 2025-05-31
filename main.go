@@ -7,12 +7,15 @@ import (
 
 	"github.com/jesee-kuya/wget/downloader"
 	"github.com/jesee-kuya/wget/logger"
+	"github.com/jesee-kuya/wget/util"
 )
 
 func main() {
 	background := flag.Bool("B", false, "Download in background and log output to wget-log")
 	output := flag.String("O", "", "Specify file name")
-	outputDir := flag.String("P", "", "Specify directory to save the file")	
+	outputDir := flag.String("P", "", "Specify directory to save the file")
+	rateLimit := flag.String("rate-limit", "", "Limit download speed (e.g., 100k, 1M)")
+
 	flag.Parse()
 	args := flag.Args()
 
@@ -23,9 +26,16 @@ func main() {
 
 	url := args[0]
 
+	parsedRate, err := util.ParseRateLimit(*rateLimit)
+	if err != nil {
+		fmt.Println("Error parsing rate limit:", err)
+		return
+	}
+
 	opts := downloader.Options{
 		OutputName: *output,
 		OutputDir:  *outputDir,
+		RateLimit:  parsedRate,
 	}
 
 	if *background {
@@ -51,7 +61,7 @@ func main() {
 
 	log := logger.NewLogger(os.Stdout)
 
-	err := downloader.DownloadFile(url, opts, log)
+	err = downloader.DownloadFile(url, opts, log)
 	if err != nil {
 		log.Error(err)
 		return
