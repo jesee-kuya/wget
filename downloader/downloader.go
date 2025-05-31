@@ -70,12 +70,11 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 		for {
 			n, readErr := resp.Body.Read(buf)
 			if n > 0 {
-				// Rate limiting logic
 				if opts.RateLimit > 0 {
 					now := time.Now()
 					if !lastReadTime.IsZero() {
 						elapsed := now.Sub(lastReadTime)
-						expected := time.Duration(float64(n) / opts.RateLimit * 1e9) // bytes per second to nanoseconds
+						expected := time.Duration(float64(n) / opts.RateLimit * 1e9)
 						if expected > elapsed {
 							time.Sleep(expected - elapsed)
 						}
