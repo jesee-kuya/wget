@@ -38,7 +38,7 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 	if filename == "" {
 		filename = util.ExtractFilenameFromURL(url)
 	}
-	resolvedDir, err := util.ProcessDirectoryPath(opts.OutputDir, true, 0755)
+	resolvedDir, err := util.ProcessDirectoryPath(opts.OutputDir, true, 0o755)
 	if err != nil {
 		log.Error(fmt.Errorf("failed to process output directory: %w", err))
 		return err
@@ -65,9 +65,24 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 	done := make(chan error, 1)
 
 	go func() {
+		var lastReadTime time.Time
+
 		for {
 			n, readErr := resp.Body.Read(buf)
 			if n > 0 {
+				// Rate limiting logic
+				if opts.RateLimit > 0 {
+					now := time.Now()
+					if !lastReadTime.IsZero() {
+						elapsed := now.Sub(lastReadTime)
+						expected := time.Duration(float64(n) / opts.RateLimit * 1e9) // bytes per second to nanoseconds
+						if expected > elapsed {
+							time.Sleep(expected - elapsed)
+						}
+					}
+					lastReadTime = time.Now()
+				}
+
 				nw, writeErr := outFile.Write(buf[:n])
 				if writeErr != nil {
 					done <- writeErr
