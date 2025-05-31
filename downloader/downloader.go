@@ -38,7 +38,13 @@ func DownloadFile(url string, opts Options, log *logger.Logger) error {
 	if filename == "" {
 		filename = util.ExtractFilenameFromURL(url)
 	}
-	outputPath := filepath.Join(util.FallbackDir(opts.OutputDir), filename)
+	resolvedDir, err := util.ProcessDirectoryPath(opts.OutputDir, true, 0755)
+	if err != nil {
+		log.Error(fmt.Errorf("failed to process output directory: %w", err))
+		return err
+	}
+	outputPath := filepath.Join(resolvedDir, filename)
+
 	log.SavingTo(outputPath)
 
 	outFile, err := os.Create(outputPath)
