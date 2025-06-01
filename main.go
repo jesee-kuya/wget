@@ -23,15 +23,15 @@ func main() {
 
 	var url string
 
-	if *inputFile == ""{
+	if *inputFile == "" {
 		if len(args) == 0 {
 			fmt.Println("Usage: wget [options] <URL>")
 			return
 		}
 		url = args[0]
-	}	
-	
-	url = ""	
+	} else {
+		url = ""
+	}
 
 	parsedRate, err := util.ParseRateLimit(*rateLimit)
 	if err != nil {
@@ -42,7 +42,7 @@ func main() {
 	opts := downloader.Options{
 		OutputName: *output,
 		OutputDir:  *outputDir,
-		InputFile: *inputFile,
+		InputFile:  *inputFile,
 		RateLimit:  parsedRate,
 	}
 
@@ -91,11 +91,11 @@ func main() {
 
 		fileLogger := logger.NewLogger(logFile)
 
-		if *inputFile != ""{
-			downloader.DownloadInput( opts, fileLogger)
-		}else{
+		if *inputFile != "" {
+			downloader.DownloadInput(opts, fileLogger)
+		} else {
 			err = downloader.DownloadFile(url, opts, fileLogger)
-		}		
+		}
 		if err != nil {
 			fmt.Fprintf(logFile, "Download failed: %v\n", err)
 			return
@@ -105,9 +105,9 @@ func main() {
 
 	log := logger.NewLogger(os.Stdout)
 
-	if *inputFile != ""{
-		downloader.DownloadInput( opts, log)
-	}else{
+	if *inputFile != "" {
+		downloader.DownloadInput(opts, log)
+	} else {
 		err = downloader.DownloadFile(url, opts, log)
 	}
 	if err != nil {
