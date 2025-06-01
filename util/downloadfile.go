@@ -20,6 +20,13 @@ func downloadFile(url string, wg *sync.WaitGroup, mu *sync.Mutex, completed *[]s
         fmt.Printf("Error downloading %s: HTTP status %s\n", url, resp.Status)
         return
     }
-	
+
+
+	// Extract file name from URL
+    fileName := path.Base(resp.Request.URL.Path)
+    if fileName == "" || fileName == "/" {
+        fileName = "downloaded_file"
+    }
+
 
 }
