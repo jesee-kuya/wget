@@ -83,6 +83,91 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 	}
 }
 
+// func (l *Logger) DownloadFile(url string, opt downloader.Options) error {
+// 	startTime := time.Now()
+// 	l.Start(url, startTime)
+
+// 	resp, err := http.Get(url)
+// 	if err != nil {
+// 		l.Error(fmt.Errorf("Error downloading %s: %v\n", url, err))
+// 		return err
+// 	}
+// 	defer resp.Body.Close()
+
+// 	l.Status(resp.StatusCode)
+
+// 	if resp.StatusCode != http.StatusOK {
+// 		l.Error(fmt.Errorf("Error downloading %s: HTTP status %s\n", url, resp.Status))
+// 		return err
+// 	}
+
+// 	fileName := opt.OutputName
+// 	if fileName == "" {
+// 		fileName = path.Base(resp.Request.URL.Path)
+// 		if fileName == "" || fileName == "/" {
+// 			fileName = "downloaded_file"
+// 		}
+// 	}
+
+// 	savePath := opt.OutputDir
+// 	if savePath == "" {
+// 		savePath = "."
+// 	}
+
+// 	fullPath := filepath.Join(savePath, fileName)
+// 	l.SavingTo(fullPath)
+
+// 	if err := os.MkdirAll(savePath, 0o755); err != nil {
+// 		l.Error(fmt.Errorf("failed to create directory %s: %v", savePath, err))
+// 		return err
+// 	}
+
+// 	out, err := os.Create(fullPath)
+// 	if err != nil {
+// 		l.Error(fmt.Errorf("failed to create file %s: %v", fullPath, err))
+// 		return err
+// 	}
+// 	defer out.Close()
+
+// 	l.ContentInfo(resp.ContentLength)
+
+// 	size, err := io.Copy(out, resp.Body)
+// 	if err != nil {
+// 		l.Error(fmt.Errorf("Error writing to file %s: %v\n", fileName, err))
+// 		return err
+// 	}
+
+// 	l.Done(time.Now(), url)
+// 	l.ContentInfo(size)
+// 	return nil
+// }
+
+// func (l *Logger) Downloader(opt downloader.Options) {
+// 	urls, err := util.ReadURLs(opt.InputFile)
+// 	if err != nil{
+// 		l.Error(err)
+// 		return
+// 	}
+
+// 	var wg sync.WaitGroup
+// 	var mu sync.Mutex
+// 	var completed []string
+
+// 	for _, url := range urls{
+// 		wg.Add(1)
+// 		go func (u string)  {
+// 			defer wg.Done()
+// 			err := l.DownloadFile(url, opt)
+// 			if err == nil {
+// 				mu.Lock()
+// 				completed = append(completed, url)
+// 				mu.Unlock()
+// 			}
+// 		}(url)
+// 	}
+
+// }
+
 // Error logs an error message.
 func (l *Logger) Error(err error) {
 	fmt.Fprintf(l.Output, "error: %v\n", err)

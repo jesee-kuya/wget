@@ -8,7 +8,7 @@ import (
 )
 
 // Function to read URLs from the file
-func readURLs(fileName string) ([]string, error) {
+func ReadURLs(fileName string) ([]string, error) {
     file, err := os.Open(fileName)
     if err != nil {
         return nil, fmt.Errorf("failed to open file %s: %v", fileName, err)
