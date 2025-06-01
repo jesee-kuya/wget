@@ -11,7 +11,7 @@ import (
 func readURLs(fileName string) ([]string, error) {
     file, err := os.Open(fileName)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("failed to open file %s: %v", fileName, err)
     }
     defer file.Close()
 
