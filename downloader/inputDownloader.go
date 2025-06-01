@@ -57,7 +57,7 @@ func DownloadInput(opt Options, log *logger.Logger){
 
 			savePath, err := util.ProcessDirectoryPath(opt.OutputDir, true, 0o755)
 			if err != nil {
-				fmt.Fprintf(log.Output,"failed to process output directory: %w", err)
+				fmt.Fprintf(log.Output,"failed to process output directory: %v", err)
 				return
 			}
     
