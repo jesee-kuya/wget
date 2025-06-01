@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"net/http"
+	"path"
 	"sync"
 )
 
@@ -27,6 +28,14 @@ func downloadFile(url string, wg *sync.WaitGroup, mu *sync.Mutex, completed *[]s
     if fileName == "" || fileName == "/" {
         fileName = "downloaded_file"
     }
+
+	// Create the output file
+    out, err := os.Create(fileName)
+    if err != nil {
+        fmt.Printf("Error creating file %s: %v\n", fileName, err)
+        return
+    }
+    defer out.Close()
 
 
 }
