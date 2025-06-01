@@ -50,5 +50,8 @@ func downloadFile(url string, wg *sync.WaitGroup, mu *sync.Mutex, completed *[]s
     fmt.Printf("content size: %d\n", size)
     fmt.Printf("finished %s\n", fileName)
 
-
+	// Safely append to completed URLs
+    mu.Lock()
+    *completed = append(*completed, url)
+    mu.Unlock()
 }
