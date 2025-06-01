@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -44,6 +45,10 @@ func downloadFile(url string, wg *sync.WaitGroup, mu *sync.Mutex, completed *[]s
         fmt.Printf("Error writing to file %s: %v\n", fileName, err)
         return
     }
+
+	// Print content size and completion message
+    fmt.Printf("content size: %d\n", size)
+    fmt.Printf("finished %s\n", fileName)
 
 
 }
