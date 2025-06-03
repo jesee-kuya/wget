@@ -104,7 +104,6 @@ func DownloadInput(opt Options, log *logger.Logger) {
 				}
 			}
 
-
 			mu.Lock()
 			contentSizes = append(contentSizes, written)
 			fileNames = append(fileNames, fileName)
