@@ -2,9 +2,11 @@ package downloader
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/jesee-kuya/wget/logger"
 	"github.com/jesee-kuya/wget/util"
@@ -41,6 +43,14 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 		currentURL := queueSlice[0]
 		queueSlice = queueSlice[1:]
 		mu.Unlock()
+
+		// Download the current URL
+		log.Start(currentURL, time.Now())
+		resp, err := http.Get(currentURL)
+		if err != nil {
+			log.Error(fmt.Errorf("failed HTTP GET %s: %w", currentURL, err))
+			continue
+		}
 
 	}
 
