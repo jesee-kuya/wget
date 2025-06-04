@@ -51,5 +51,12 @@ func CreateURLDirectories(rawURL string, baseDir string) (string, error) {
 		}
 	}
 
-	
+	// Construct the directory path
+	dir := filepath.Join(baseDir, host, filepath.Join(dirSegments...))
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		err = fmt.Errorf("failed to create directory %s: %v", dir, err)
+		return "", err
+	}
+
+	return dir, nil
 }
