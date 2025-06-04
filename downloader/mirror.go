@@ -1,11 +1,14 @@
 package downloader
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -80,6 +83,22 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 			continue
 		}
 
+		// Write the body to a file
+		fileErr := os.WriteFile(outputPath, bodyBytes, 0o644)
+		if fileErr != nil {
+			log.Error(fmt.Errorf("failed to write file %s: %w", outputPath, fileErr))
+			continue
+		}
+		log.ContentInfo(int64(len(bodyBytes)))
+		log.Progress(int64(len(bodyBytes)), int64(len(bodyBytes)), 0, 0)
+		log.Done(time.Now(), currentURL)
+
+		// If content-type is HTML, parse for additional links
+		contentType := resp.Header.Get("Content-Type")
+		if strings.HasPrefix(contentType, "text/html") {
+			// Create a reader over the saved body bytes
+			reader := bytes.NewReader(bodyBytes)
+		}
 	}
 
 	return nil
