@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -86,8 +87,13 @@ func rewriteNode(n *html.Node, baseURL *url.URL, rootDir, filePath string) error
 							return fmt.Errorf("failed to compute relative path for %s: %w", parsedURL.String(), err)
 						}
 
-
+						// Update the attribute with the relative path
+						n.Attr[i].Val = relPath
+					}
+				}
+			}
+		}
+	}
 
 	return nil
 }
-
