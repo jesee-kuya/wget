@@ -1,3 +1,5 @@
+// cmd/wget/main.go
+
 package main
 
 import (
@@ -17,20 +19,20 @@ func main() {
 	inputFile := flag.String("i", "", "Input file containing URLs (one per line)")
 	outputDir := flag.String("P", "", "Specify directory to save the file")
 	rateLimit := flag.String("rate-limit", "", "Limit download speed (e.g., 100k, 1M)")
+	mirror := flag.Bool("mirror", false, "Mirror the entire website starting from the given URL")
 
 	flag.Parse()
 	args := flag.Args()
 
-	var url string
-
+	var urlArg string
 	if *inputFile == "" {
 		if len(args) == 0 {
 			fmt.Println("Usage: wget [options] <URL>")
 			return
 		}
-		url = args[0]
+		urlArg = args[0]
 	} else {
-		url = ""
+		urlArg = ""
 	}
 
 	parsedRate, err := util.ParseRateLimit(*rateLimit)
@@ -40,10 +42,12 @@ func main() {
 	}
 
 	opts := downloader.Options{
-		OutputName: *output,
-		OutputDir:  *outputDir,
-		InputFile:  *inputFile,
-		RateLimit:  parsedRate,
+		OutputName:  *output,
+		OutputDir:   *outputDir,
+		InputFile:   *inputFile,
+		RateLimit:   parsedRate,
+		RunInBg:     *background,
+		LogFilePath: "wget-log",
 	}
 
 	if *background {
@@ -59,7 +63,7 @@ func main() {
 			cmd := exec.Command(execPath, os.Args[1:]...)
 			cmd.Env = append(os.Environ(), "WGET_BACKGROUND=1")
 
-			logFile, err := os.OpenFile("wget-log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+			logFile, err := os.OpenFile("wget-log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 			if err != nil {
 				fmt.Println("Error creating log file:", err)
 				return
@@ -77,7 +81,7 @@ func main() {
 			return
 		}
 
-		logFile, err := os.OpenFile("wget-log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+		logFile, err := os.OpenFile("wget-log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 		if err != nil {
 			fmt.Println("Error creating log file:", err)
 			return
@@ -88,25 +92,33 @@ func main() {
 
 		if *inputFile != "" {
 			downloader.DownloadInput(opts, fileLogger)
+		} else if *mirror {
+			err := downloader.MirrorSite(urlArg, opts, fileLogger)
+			if err != nil {
+				fmt.Fprintf(logFile, "Mirror failed: %v\n", err)
+			}
 		} else {
-			err = downloader.DownloadFile(url, opts, fileLogger)
-		}
-		if err != nil {
-			fmt.Fprintf(logFile, "Download failed: %v\n", err)
-			return
+			err := downloader.DownloadFile(urlArg, opts, fileLogger)
+			if err != nil {
+				fmt.Fprintf(logFile, "Download failed: %v\n", err)
+			}
 		}
 		return
 	}
 
-	log := logger.NewLogger(os.Stdout)
+	stdoutLogger := logger.NewLogger(os.Stdout)
 
 	if *inputFile != "" {
-		downloader.DownloadInput(opts, log)
+		downloader.DownloadInput(opts, stdoutLogger)
+	} else if *mirror {
+		err := downloader.MirrorSite(urlArg, opts, stdoutLogger)
+		if err != nil {
+			stdoutLogger.Error(err)
+		}
 	} else {
-		err = downloader.DownloadFile(url, opts, log)
-	}
-	if err != nil {
-		log.Error(err)
-		return
+		err := downloader.DownloadFile(urlArg, opts, stdoutLogger)
+		if err != nil {
+			stdoutLogger.Error(err)
+		}
 	}
 }
