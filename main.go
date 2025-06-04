@@ -20,6 +20,8 @@ func main() {
 	outputDir := flag.String("P", "", "Specify directory to save the file")
 	rateLimit := flag.String("rate-limit", "", "Limit download speed (e.g., 100k, 1M)")
 	mirror := flag.Bool("mirror", false, "Mirror the entire website starting from the given URL")
+	rejectList := flag.String("R", "", "Comma-separated suffixes to reject (e.g. jpg,gif)")
+	excludeList := flag.String("X", "", "Comma-separated directories to exclude (e.g. /js,/assets)")
 
 	flag.Parse()
 	args := flag.Args()
@@ -48,6 +50,8 @@ func main() {
 		RateLimit:   parsedRate,
 		RunInBg:     *background,
 		LogFilePath: "wget-log",
+		Reject:      util.SplitAndTrim(*rejectList, ","),
+		Exclude:     util.SplitAndTrim(*excludeList, ","),
 	}
 
 	if *background {
