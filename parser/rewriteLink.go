@@ -80,6 +80,13 @@ func rewriteNode(n *html.Node, baseURL *url.URL, rootDir, filePath string) error
 							return err
 						}
 
+						// Convert to relative path based on the current file's location
+						relPath, err := filepath.Rel(filepath.Dir(filePath), localPath)
+						if err != nil {
+							return fmt.Errorf("failed to compute relative path for %s: %w", parsedURL.String(), err)
+						}
+
+
 
 	return nil
 }
