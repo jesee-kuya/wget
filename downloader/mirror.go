@@ -27,9 +27,7 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 		return fmt.Errorf("invalid start URL %q: %w", startURL, err)
 	}
 
-	// visited keeps track of which URLs we've already enqueued/downloaded
 	visited := make(map[string]bool)
-	// mu protects visited and queueSlice
 	var mu sync.Mutex
 
 	// queueSlice implements a simple FIFO queue
