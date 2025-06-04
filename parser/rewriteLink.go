@@ -64,6 +64,15 @@ func rewriteNode(n *html.Node, baseURL *url.URL, rootDir, filePath string) error
 			attrKey = "src"
 		}
 
+		if attrKey != "" {
+			for i, attr := range n.Attr {
+				if attr.Key == attrKey && attr.Val != "" {
+					parsedURL, err := baseURL.Parse(strings.TrimSpace(attr.Val))
+					if err != nil {
+						continue // Skip invalid URLs
+					}
+
+
 	return nil
 }
 
