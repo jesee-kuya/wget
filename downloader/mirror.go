@@ -27,12 +27,6 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 		return fmt.Errorf("invalid start URL %q: %w", startURL, err)
 	}
 
-	// Create the root directory for this domain
-	domainDir := filepath.Join(opts.OutputDir, base.Host)
-	if err := util.EnsureDir(domainDir, 0o755); err != nil {
-		return fmt.Errorf("failed to create domain directory: %w", err)
-	}
-
 	// visited keeps track of which URLs we've already enqueued/downloaded
 	visited := make(map[string]bool)
 	// mu protects visited and queueSlice
@@ -64,7 +58,7 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 		}
 
 		// Determine where to save this file in the domain directory
-		saveDir, err := util.CreateURLDirectories(currentURL, domainDir)
+		saveDir, err := util.CreateURLDirectories(currentURL, opts.OutputDir)
 		if err != nil {
 			log.Error(fmt.Errorf("failed to create folders for %s: %w", currentURL, err))
 			resp.Body.Close()
