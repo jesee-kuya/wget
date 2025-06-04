@@ -46,6 +46,9 @@ func RewriteLinksInHTML(filePath string, baseURL *url.URL, rootDir string) error
 	if err := tempFile.Close(); err != nil {
 		return fmt.Errorf("failed to close temp file for %s: %w", filePath, err)
 	}
+	if err := os.Rename(tempFile.Name(), filePath); err != nil {
+		return fmt.Errorf("failed to replace original file %s: %w", filePath, err)
+	}
 
 	return nil
 }
