@@ -28,7 +28,17 @@ func CreateURLDirectories(rawURL string, baseDir string) (string, error) {
 		}
 	}
 
-	
+	// Get the path components, excluding the file name
+	dirPath := strings.Trim(parsedURL.Path, "/")
+	if dirPath == "" {
+		// Only host, no path
+		dir := filepath.Join(baseDir, host)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			err = fmt.Errorf("failed to create directory %s: %v", dir, err)
+			return "", err
+		}
+		return dir, nil
+	}
 
 	
 
