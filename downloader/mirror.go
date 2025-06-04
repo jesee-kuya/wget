@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/jesee-kuya/wget/logger"
+	"github.com/jesee-kuya/wget/parser"
 	"github.com/jesee-kuya/wget/util"
 )
 
@@ -98,6 +99,14 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 		if strings.HasPrefix(contentType, "text/html") {
 			// Create a reader over the saved body bytes
 			reader := bytes.NewReader(bodyBytes)
+
+			// Extract internal links
+			foundLinks, parseErr := parser.ExtractLinks(base, reader)
+			if parseErr != nil {
+				log.Error(fmt.Errorf("failed to parse HTML %s: %w", currentURL, parseErr))
+				continue
+			}
+
 		}
 	}
 
