@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -49,6 +50,33 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 		resp, err := http.Get(currentURL)
 		if err != nil {
 			log.Error(fmt.Errorf("failed HTTP GET %s: %w", currentURL, err))
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			log.Error(fmt.Errorf("bad status for %s: %s", currentURL, resp.Status))
+			resp.Body.Close()
+			continue
+		}
+
+		// Determine where to save this file in the domain directory
+		saveDir, err := util.CreateURLDirectories(currentURL, domainDir)
+		if err != nil {
+			log.Error(fmt.Errorf("failed to create folders for %s: %w", currentURL, err))
+			resp.Body.Close()
+			continue
+		}
+
+		// Derive the filename from the URL path
+		filename := util.ExtractFilenameFromURL(currentURL)
+		outputPath := filepath.Join(saveDir, filename)
+		log.SavingTo(outputPath)
+
+		// Read the entire response body into memory (so we can both save and parse it if HTML)
+		bodyBytes, readErr := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if readErr != nil {
+			log.Error(fmt.Errorf("failed to read body %s: %w", currentURL, readErr))
 			continue
 		}
 
