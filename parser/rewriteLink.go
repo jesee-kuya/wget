@@ -126,5 +126,11 @@ func convertURLToLocalPath(u *url.URL, rootDir string) (string, error) {
 	// Join with the root directory
 	localPath := filepath.Join(rootDir, relativePath)
 
+	// Ensure the path is clean and absolute
+	absPath, err := filepath.Abs(localPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve absolute path for %s: %w", localPath, err)
+	}
+
 	return absPath, nil
 }
