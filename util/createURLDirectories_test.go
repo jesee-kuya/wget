@@ -19,7 +19,7 @@ func TestCreateURLDirectories(t *testing.T) {
 			if err != nil {
 				t.Errorf("Failed to create directories for %s: %v", tc.url, err)
 			} else {
-				expectedDir := filepath.Join("", "example.com","another", "path", "to")
+				expectedDir := filepath.Join("", "example.com", "another", "path", "to")
 				if dir != expectedDir {
 					t.Errorf("Expected directory %s, got %s", expectedDir, dir)
 				}
