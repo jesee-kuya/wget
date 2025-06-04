@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/jesee-kuya/wget/util"
 	"golang.org/x/net/html"
 )
 
@@ -103,4 +105,15 @@ func rewriteNode(n *html.Node, baseURL *url.URL, rootDir, filePath string) error
 	}
 
 	return nil
+}
+
+// convertURLToLocalPath converts an internal URL to its corresponding local file path.
+func convertURLToLocalPath(u *url.URL, rootDir string) (string, error) {
+	// Extract the filename from the URL
+	filename := util.ExtractFilenameFromURL(u.String())
+	if filename == "index.html" && !strings.HasSuffix(u.Path, "/") && !strings.HasSuffix(u.Path, ".html") {
+		filename = path.Base(u.Path) + ".html"
+	}
+
+	return absPath, nil
 }
