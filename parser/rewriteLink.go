@@ -24,5 +24,10 @@ func RewriteLinksInHTML(filePath string, baseURL *url.URL, rootDir string) error
 		return fmt.Errorf("failed to parse HTML file %s: %w", filePath, err)
 	}
 
+	// Rewrite links
+	if err := rewriteNode(doc, baseURL, rootDir, filePath); err != nil {
+		return fmt.Errorf("failed to rewrite links in %s: %w", filePath, err)
+	}
+
 	return nil
 }
