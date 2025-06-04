@@ -52,3 +52,18 @@ func RewriteLinksInHTML(filePath string, baseURL *url.URL, rootDir string) error
 
 	return nil
 }
+
+// rewriteNode traverses the HTML node tree and rewrites internal URLs to local paths.
+func rewriteNode(n *html.Node, baseURL *url.URL, rootDir, filePath string) error {
+	if n.Type == html.ElementNode {
+		var attrKey string
+		switch n.Data {
+		case "a", "link":
+			attrKey = "href"
+		case "img", "script", "iframe":
+			attrKey = "src"
+		}
+
+	return nil
+}
+
