@@ -41,6 +41,16 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 		queueSlice = queueSlice[1:]
 		mu.Unlock()
 
+		urlParsed, err := url.Parse(currentURL)
+		if err != nil {
+			log.Error(fmt.Errorf("failed to parse URL %s: %w", currentURL, err))
+			continue
+		}
+
+		if util.ShouldReject(urlParsed.Path, opts.Reject) || util.ShouldExclude(urlParsed.Path, opts.Exclude) {
+			continue
+		}
+
 		// Download the current URL
 		log.Start(currentURL, time.Now())
 		resp, err := http.Get(currentURL)
