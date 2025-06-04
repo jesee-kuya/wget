@@ -107,6 +107,15 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 				continue
 			}
 
+			// Enqueue each new link
+			for _, link := range foundLinks {
+				mu.Lock()
+				if !visited[link] {
+					visited[link] = true
+					queueSlice = append(queueSlice, link)
+				}
+				mu.Unlock()
+			}
 		}
 	}
 
