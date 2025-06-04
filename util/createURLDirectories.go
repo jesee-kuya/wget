@@ -40,7 +40,16 @@ func CreateURLDirectories(rawURL string, baseDir string) (string, error) {
 		return dir, nil
 	}
 
-	
+	// Split path and exclude the last component if it’s a file
+	pathSegments := strings.Split(dirPath, "/")
+	dirSegments := pathSegments
+	if len(pathSegments) > 0 {
+		// Check if the last segment is a file (has an extension)
+		lastSegment := pathSegments[len(pathSegments)-1]
+		if strings.Contains(lastSegment, ".") {
+			dirSegments = pathSegments[:len(pathSegments)-1]
+		}
+	}
 
 	
 }
