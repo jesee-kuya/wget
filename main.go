@@ -15,16 +15,17 @@ import (
 
 func main() {
 	rejectList := ""
+	excludeList := ""
 	background := flag.Bool("B", false, "Download in background and log output to wget-log")
 	output := flag.String("O", "", "Specify file name")
 	inputFile := flag.String("i", "", "Input file containing URLs (one per line)")
 	outputDir := flag.String("P", "", "Specify directory to save the file")
 	rateLimit := flag.String("rate-limit", "", "Limit download speed (e.g., 100k, 1M)")
 	mirror := flag.Bool("mirror", false, "Mirror the entire website starting from the given URL")
-	rejectShort := flag.String("R", "", "Comma-separated suffixes to reject (e.g. jpg,gif)")
 	reject := flag.String("reject", "", "Comma-separated suffixes to reject (e.g. jpg,gif)")
-
-	excludeList := flag.String("X", "", "Comma-separated directories to exclude (e.g. /js,/assets)")
+	rejectShort := flag.String("R", "", "Comma-separated suffixes to reject (e.g. jpg,gif)")
+	exclude := flag.String("exclude", "", "Comma-separated directories to exclude (e.g. /js,/assets)")
+	excludeShort := flag.String("X", "", "Comma-separated directories to exclude (e.g. /js,/assets)")
 
 	flag.Parse()
 	args := flag.Args()
@@ -33,6 +34,12 @@ func main() {
 		rejectList = *rejectShort
 	} else {
 		rejectList = *reject
+	}
+
+	if *excludeShort != "" {
+		excludeList = *excludeShort
+	} else if *exclude != "" {
+		excludeList = *exclude
 	}
 
 	var urlArg string
@@ -60,7 +67,7 @@ func main() {
 		RunInBg:     *background,
 		LogFilePath: "wget-log",
 		Reject:      util.SplitAndTrim(rejectList, ","),
-		Exclude:     util.SplitAndTrim(*excludeList, ","),
+		Exclude:     util.SplitAndTrim(excludeList, ","),
 	}
 
 	if *background {
