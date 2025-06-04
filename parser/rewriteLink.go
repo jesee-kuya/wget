@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+
+	"golang.org/x/net/html"
 )
 
 // RewriteLinksInHTML rewrites internal URLs in an HTML file to local relative paths.
@@ -15,6 +17,12 @@ func RewriteLinksInHTML(filePath string, baseURL *url.URL, rootDir string) error
 		return fmt.Errorf("failed to open HTML file %s: %w", filePath, err)
 	}
 	defer file.Close()
+
+	// Parse the HTML
+	doc, err := html.Parse(file)
+	if err != nil {
+		return fmt.Errorf("failed to parse HTML file %s: %w", filePath, err)
+	}
 
 	return nil
 }
