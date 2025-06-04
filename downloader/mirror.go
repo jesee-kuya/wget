@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"sync"
 
 	"github.com/jesee-kuya/wget/logger"
 	"github.com/jesee-kuya/wget/util"
@@ -23,6 +24,24 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 	domainDir := filepath.Join(opts.OutputDir, base.Host)
 	if err := util.EnsureDir(domainDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create domain directory: %w", err)
+	}
+
+	// visited keeps track of which URLs we've already enqueued/downloaded
+	visited := make(map[string]bool)
+	// mu protects visited and queueSlice
+	var mu sync.Mutex
+
+	// queueSlice implements a simple FIFO queue
+	queueSlice := []string{startURL}
+	visited[startURL] = true
+
+	for len(queueSlice) > 0 {
+		// Pop front
+		mu.Lock()
+		currentURL := queueSlice[0]
+		queueSlice = queueSlice[1:]
+		mu.Unlock()
+
 	}
 
 	return nil
