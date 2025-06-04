@@ -42,5 +42,10 @@ func RewriteLinksInHTML(filePath string, baseURL *url.URL, rootDir string) error
 		return fmt.Errorf("failed to render HTML for %s: %w", filePath, err)
 	}
 
+	// Replace the original file with the temp file
+	if err := tempFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file for %s: %w", filePath, err)
+	}
+
 	return nil
 }
