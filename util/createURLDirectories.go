@@ -16,7 +16,17 @@ func CreateURLDirectories(rawURL string, baseDir string) (string, error) {
 		return "", err
 	}
 
-	
+	// Get the host
+	host := parsedURL.Host
+	if host == "" {
+		// If no host, use the first path segment or a default
+		pathSegments := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
+		if len(pathSegments) > 0 {
+			host = pathSegments[0]
+		} else {
+			host = "unknown"
+		}
+	}
 
 	
 
