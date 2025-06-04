@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/net/html"
 )
@@ -28,6 +29,13 @@ func RewriteLinksInHTML(filePath string, baseURL *url.URL, rootDir string) error
 	if err := rewriteNode(doc, baseURL, rootDir, filePath); err != nil {
 		return fmt.Errorf("failed to rewrite links in %s: %w", filePath, err)
 	}
+
+	// Create a temporary file for the rewritten content
+	tempFile, err := os.CreateTemp(filepath.Dir(filePath), "temp_rewrite_*.html")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file for %s: %w", filePath, err)
+	}
+	defer tempFile.Close()
 
 	return nil
 }
