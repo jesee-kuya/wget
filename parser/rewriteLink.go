@@ -95,5 +95,12 @@ func rewriteNode(n *html.Node, baseURL *url.URL, rootDir, filePath string) error
 		}
 	}
 
+	// Recursively process child nodes
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if err := rewriteNode(c, baseURL, rootDir, filePath); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
