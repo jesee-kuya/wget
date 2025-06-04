@@ -72,6 +72,14 @@ func rewriteNode(n *html.Node, baseURL *url.URL, rootDir, filePath string) error
 						continue // Skip invalid URLs
 					}
 
+					// Only rewrite internal URLs (same host)
+					if parsedURL.Host == baseURL.Host {
+						// Get the relative path from the root directory
+						localPath, err := convertURLToLocalPath(parsedURL, rootDir)
+						if err != nil {
+							return err
+						}
+
 
 	return nil
 }
