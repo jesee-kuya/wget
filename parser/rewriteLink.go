@@ -123,5 +123,8 @@ func convertURLToLocalPath(u *url.URL, rootDir string) (string, error) {
 		relativePath = filepath.Join(relativePath, filename)
 	}
 
+	// Join with the root directory
+	localPath := filepath.Join(rootDir, relativePath)
+
 	return absPath, nil
 }
