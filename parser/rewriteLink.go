@@ -115,5 +115,13 @@ func convertURLToLocalPath(u *url.URL, rootDir string) (string, error) {
 		filename = path.Base(u.Path) + ".html"
 	}
 
+	// Construct the local path relative to the root directory
+	relativePath := strings.TrimPrefix(u.Path, "/")
+	if relativePath == "" {
+		relativePath = filename
+	} else if strings.HasSuffix(u.Path, "/") {
+		relativePath = filepath.Join(relativePath, filename)
+	}
+
 	return absPath, nil
 }
