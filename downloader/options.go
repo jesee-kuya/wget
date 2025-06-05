@@ -10,4 +10,5 @@ type Options struct {
 	LogFilePath string   // if -B is set, logs are redirected here
 	Reject      []string // -R: file suffixes to skip (e.g. []string{"jpg","gif"})
 	Exclude     []string // -X: directory paths to skip (e.g. []string{"/js","/assets"})
+	ConvertLink bool     // --convert-link: convert the links in the downloaded files so that they can be viewed offline
 }
