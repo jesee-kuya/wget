@@ -26,6 +26,7 @@ func main() {
 	rejectShort := flag.String("R", "", "Comma-separated suffixes to reject (e.g. jpg,gif)")
 	exclude := flag.String("exclude", "", "Comma-separated directories to exclude (e.g. /js,/assets)")
 	excludeShort := flag.String("X", "", "Comma-separated directories to exclude (e.g. /js,/assets)")
+	convertLinks := flag.Bool("convert-links", false, "convert the links in the downloaded files so that they can be viewed offline")
 
 	flag.Parse()
 	args := flag.Args()
@@ -68,6 +69,7 @@ func main() {
 		LogFilePath: "wget-log",
 		Reject:      util.SplitAndTrim(rejectList, ","),
 		Exclude:     util.SplitAndTrim(excludeList, ","),
+		ConvertLink: *convertLinks,
 	}
 
 	if *background {
