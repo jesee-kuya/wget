@@ -29,7 +29,7 @@ func (l *Logger) Done(timestamp time.Time, url string) {
 // Start logs the start of a process with a timestamp.
 func (l *Logger) Start(url string, timestamp time.Time) {
 	fmt.Fprintf(l.Output, "start at %s\n", timestamp.Format("2006-01-02 15:04:05"))
-	fmt.Fprintf(l.Output, "sending request, awaiting response... ")
+	//fmt.Fprintf(l.Output, "sending request, awaiting response... ")
 }
 
 // SavingTo logs the path where the file is being saved.
@@ -58,16 +58,44 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 
 	toKiB := func(b int64) float64 { return float64(b) / 1024.0 }
 	writtenKiB := toKiB(written)
-	totalKiB := toKiB(total)
+	speedStr := util.FormatSpeed(speed)
 
-	percent := float64(written) / float64(total)
-	if total == 0 {
-		percent = 0
+	if total <= 0 {
+		progressIndex := int(written/10240) % barWidth
+		bar := make([]rune, barWidth)
+		for i := range bar {
+			if i == progressIndex {
+				bar[i] = '>'
+			} else {
+				bar[i] = ' '
+			}
+		}
+		progressLine := fmt.Sprintf(
+			"%.2f KiB / ??.?? KiB [%s]   ??%% %s ETA: ?",
+			writtenKiB,
+			string(bar),
+			speedStr,
+		)
+
+		if l.Output == os.Stdout {
+			fmt.Fprintf(l.Output, "\r%s", progressLine)
+		} else {
+			fmt.Fprintln(l.Output, progressLine)
+		}
+		return
 	}
+
+	totalKiB := toKiB(total)
+	percent := float64(written) / float64(total)
 	doneBars := int(percent * float64(barWidth))
+	if doneBars > barWidth {
+		doneBars = barWidth
+	}
+	if doneBars < 0 {
+		doneBars = 0
+	}
 	remainingBars := barWidth - doneBars
 
-	speedStr := util.FormatSpeed(speed)
 	progressLine := fmt.Sprintf(
 		"%.2f KiB / %.2f KiB [%s%s] %6.2f%% %s %s",
 		writtenKiB,
@@ -79,15 +107,12 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 		util.FormatETA(eta),
 	)
 
-	// Determine if we should overwrite or write new lines
 	if l.Output == os.Stdout {
-		// Overwrite previous line in terminal
 		fmt.Fprintf(l.Output, "\r%s", progressLine)
 		if written == total {
-			fmt.Fprintln(l.Output) // Final newline after complete
+			fmt.Fprintln(l.Output)
 		}
 	} else {
-		// Append new line in file log
 		fmt.Fprintln(l.Output, progressLine)
 	}
 }
