@@ -10,9 +10,14 @@ import (
 	"golang.org/x/net/html"
 )
 
-// RewriteLinks parses the HTML in inBuf, rewrites all internal <a>, <img>, and <link> URLs
-// to point at their local paths (rootDir/<domain>), and returns the modified HTML.
-func RewriteLinks(inBuf []byte, pageURL *url.URL, rootDir string) ([]byte, error) {
+// RewriteLinks parses the HTML in inBuf, and for each internal link (a[href], img[src], link[href]),
+// rewrites it to be relative to the HTML file’s location.
+// Parameters:
+//   - inBuf: original HTML bytes
+//   - pageURL: the URL of the HTML page
+//   - domainDir: local root directory where the domain’s files are stored
+//   - htmlDir: the local directory of this HTML file (i.e. filepath.Dir(outputPath))
+func RewriteLinks(inBuf []byte, pageURL *url.URL, domainDir, htmlDir string) ([]byte, error) {
 	doc, err := html.Parse(bytes.NewReader(inBuf))
 	if err != nil {
 		return nil, fmt.Errorf("parsing HTML: %w", err)
@@ -39,13 +44,19 @@ func RewriteLinks(inBuf []byte, pageURL *url.URL, rootDir string) ([]byte, error
 						if err != nil || u.Host != pageURL.Host {
 							continue
 						}
-						localPath := filepath.ToSlash(u.Path)
-						n.Attr[i].Val = localPath
+						// Local asset absolute path on disk:
+						localAbs := filepath.Join(domainDir, filepath.FromSlash(u.Path))
+						// Compute relative path from this HTML file’s directory:
+						rel, err := filepath.Rel(htmlDir, localAbs)
+						if err != nil {
+							// fallback to root-relative
+							rel = filepath.ToSlash(u.Path)
+						}
+						n.Attr[i].Val = filepath.ToSlash(rel)
 					}
 				}
 			}
 		}
-
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			traverse(c)
 		}
