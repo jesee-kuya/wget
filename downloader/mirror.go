@@ -107,6 +107,20 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 				mu.Unlock()
 			}
 		}
+
+		if opts.ConvertLink && strings.HasPrefix(contentType, "text/html") {
+			rewritten, err := parser.RewriteLinks(bodyBytes, urlParsed, opts.OutputDir)
+			if err != nil {
+				log.Error(fmt.Errorf("rewrite links failed: %w", err))
+			} else {
+				bodyBytes = rewritten
+			}
+		}
+
+		if err := os.WriteFile(outputPath, bodyBytes, 0o644); err != nil {
+			log.Error(fmt.Errorf("write failed %s: %w", outputPath, err))
+			continue
+		}
 	}
 
 	return nil
