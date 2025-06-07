@@ -79,48 +79,48 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 			continue
 		}
 
-		fileErr := os.WriteFile(outputPath, bodyBytes, 0o644)
-		if fileErr != nil {
-			log.Error(fmt.Errorf("failed to write file %s: %w", outputPath, fileErr))
-			continue
-		}
-		log.ContentInfo(int64(len(bodyBytes)))
-		log.Progress(int64(len(bodyBytes)), int64(len(bodyBytes)), 0, 0)
-		log.Done(time.Now(), currentURL)
-
+		// After reading bodyBytes and before writing:
 		contentType := resp.Header.Get("Content-Type")
 		if strings.HasPrefix(contentType, "text/html") {
+			// First pass: parse links into queue
 			reader := bytes.NewReader(bodyBytes)
-
 			foundLinks, parseErr := parser.ExtractLinks(base, reader)
 			if parseErr != nil {
 				log.Error(fmt.Errorf("failed to parse HTML %s: %w", currentURL, parseErr))
-				continue
-			}
-
-			for _, link := range foundLinks {
-				mu.Lock()
-				if !visited[link] {
-					visited[link] = true
-					queueSlice = append(queueSlice, link)
-				}
-				mu.Unlock()
-			}
-		}
-
-		if opts.ConvertLink && strings.HasPrefix(contentType, "text/html") {
-			rewritten, err := parser.RewriteLinks(bodyBytes, urlParsed, opts.OutputDir)
-			if err != nil {
-				log.Error(fmt.Errorf("rewrite links failed: %w", err))
 			} else {
-				bodyBytes = rewritten
+				for _, link := range foundLinks {
+					mu.Lock()
+					if !visited[link] {
+						visited[link] = true
+						queueSlice = append(queueSlice, link)
+					}
+					mu.Unlock()
+				}
+			}
+
+			// Now optionally rewrite links for offline use
+			if opts.ConvertLink {
+				// domainDir: root of this mirror, e.g. opts.OutputDir/<domain>
+				domainDir := filepath.Join(opts.OutputDir, base.Host)
+				htmlDir := filepath.Dir(outputPath)
+				rewritten, err := parser.RewriteLinks(bodyBytes, urlParsed, domainDir, htmlDir)
+				if err != nil {
+					log.Error(fmt.Errorf("rewrite links failed for %s: %w", currentURL, err))
+				} else {
+					bodyBytes = rewritten
+				}
 			}
 		}
 
+		// Finally, write the (possibly rewritten) HTML or asset to disk:
 		if err := os.WriteFile(outputPath, bodyBytes, 0o644); err != nil {
 			log.Error(fmt.Errorf("write failed %s: %w", outputPath, err))
 			continue
 		}
+
+		log.ContentInfo(int64(len(bodyBytes)))
+		log.Progress(int64(len(bodyBytes)), int64(len(bodyBytes)), 0, 0)
+		log.Done(time.Now(), currentURL)
 	}
 
 	return nil
