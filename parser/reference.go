@@ -1,136 +1,60 @@
 package parser
 
 import (
+	"bytes"
 	"fmt"
 	"net/url"
-	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/jesee-kuya/wget/util"
 	"golang.org/x/net/html"
 )
 
-// RewriteLinksInHTML rewrites internal URLs in an HTML file to local relative paths.
-// It takes the file path, base URL, and root directory where files are saved.
-func RewriteLinksInHTML(filePath string, baseURL *url.URL, rootDir string) error {
-	// Read the HTML file
-	file, err := os.Open(filePath)
+// RewriteLinks parses the HTML in inBuf, rewrites all internal <a>, <img>, and <link> URLs
+// to point at their local paths (rootDir/<domain>), and returns the modified HTML.
+func RewriteLinks(inBuf []byte, pageURL *url.URL, rootDir string) ([]byte, error) {
+	doc, err := html.Parse(bytes.NewReader(inBuf))
 	if err != nil {
-		return fmt.Errorf("failed to open HTML file %s: %w", filePath, err)
-	}
-	defer file.Close()
-
-	// Parse the HTML
-	doc, err := html.Parse(file)
-	if err != nil {
-		return fmt.Errorf("failed to parse HTML file %s: %w", filePath, err)
+		return nil, fmt.Errorf("parsing HTML: %w", err)
 	}
 
-	// Rewrite links
-	if err := rewriteNode(doc, baseURL, rootDir, filePath); err != nil {
-		return fmt.Errorf("failed to rewrite links in %s: %w", filePath, err)
-	}
-
-	// Create a temporary file for the rewritten content
-	tempFile, err := os.CreateTemp(filepath.Dir(filePath), "temp_rewrite_*.html")
-	if err != nil {
-		return fmt.Errorf("failed to create temp file for %s: %w", filePath, err)
-	}
-	defer tempFile.Close()
-
-	// Write the modified HTML to the temp file
-	if err := html.Render(tempFile, doc); err != nil {
-		return fmt.Errorf("failed to render HTML for %s: %w", filePath, err)
-	}
-
-	// Replace the original file with the temp file
-	if err := tempFile.Close(); err != nil {
-		return fmt.Errorf("failed to close temp file for %s: %w", filePath, err)
-	}
-	if err := os.Rename(tempFile.Name(), filePath); err != nil {
-		return fmt.Errorf("failed to replace original file %s: %w", filePath, err)
-	}
-
-	return nil
-}
-
-// rewriteNode traverses the HTML node tree and rewrites internal URLs to local paths.
-func rewriteNode(n *html.Node, baseURL *url.URL, rootDir, filePath string) error {
-	if n.Type == html.ElementNode {
-		var attrKey string
-		switch n.Data {
-		case "a", "link":
-			attrKey = "href"
-		case "img", "script", "iframe":
-			attrKey = "src"
-		}
-
-		if attrKey != "" {
-			for i, attr := range n.Attr {
-				if attr.Key == attrKey && attr.Val != "" {
-					parsedURL, err := baseURL.Parse(strings.TrimSpace(attr.Val))
-					if err != nil {
-						continue // Skip invalid URLs
-					}
-
-					// Only rewrite internal URLs (same host)
-					if parsedURL.Host == baseURL.Host {
-						// Get the relative path from the root directory
-						localPath, err := convertURLToLocalPath(parsedURL, rootDir)
-						if err != nil {
-							return err
+	var traverse func(*html.Node)
+	traverse = func(n *html.Node) {
+		if n.Type == html.ElementNode {
+			var key string
+			switch n.Data {
+			case "a", "link":
+				key = "href"
+			case "img":
+				key = "src"
+			}
+			if key != "" {
+				for i, attr := range n.Attr {
+					if attr.Key == key {
+						orig := strings.TrimSpace(attr.Val)
+						if orig == "" {
+							continue
 						}
-
-						// Convert to relative path based on the current file's location
-						relPath, err := filepath.Rel(filepath.Dir(filePath), localPath)
-						if err != nil {
-							return fmt.Errorf("failed to compute relative path for %s: %w", parsedURL.String(), err)
+						u, err := pageURL.Parse(orig)
+						if err != nil || u.Host != pageURL.Host {
+							continue
 						}
-
-						// Update the attribute with the relative path
-						n.Attr[i].Val = relPath
+						localPath := filepath.ToSlash(u.Path)
+						n.Attr[i].Val = localPath
 					}
 				}
 			}
 		}
-	}
 
-	// Recursively process child nodes
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if err := rewriteNode(c, baseURL, rootDir, filePath); err != nil {
-			return err
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			traverse(c)
 		}
 	}
+	traverse(doc)
 
-	return nil
-}
-
-// convertURLToLocalPath converts an internal URL to its corresponding local file path.
-func convertURLToLocalPath(u *url.URL, rootDir string) (string, error) {
-	// Extract the filename from the URL
-	filename := util.ExtractFilenameFromURL(u.String())
-	if filename == "index.html" && !strings.HasSuffix(u.Path, "/") && !strings.HasSuffix(u.Path, ".html") {
-		filename = path.Base(u.Path) + ".html"
+	var out bytes.Buffer
+	if err := html.Render(&out, doc); err != nil {
+		return nil, fmt.Errorf("rendering HTML: %w", err)
 	}
-
-	// Construct the local path relative to the root directory
-	relativePath := strings.TrimPrefix(u.Path, "/")
-	if relativePath == "" {
-		relativePath = filename
-	} else if strings.HasSuffix(u.Path, "/") {
-		relativePath = filepath.Join(relativePath, filename)
-	}
-
-	// Join with the root directory
-	localPath := filepath.Join(rootDir, relativePath)
-
-	// Ensure the path is clean and absolute
-	absPath, err := filepath.Abs(localPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve absolute path for %s: %w", localPath, err)
-	}
-
-	return absPath, nil
+	return out.Bytes(), nil
 }
