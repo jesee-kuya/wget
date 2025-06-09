@@ -109,6 +109,11 @@ func MirrorSite(startURL string, opts Options, log *logger.Logger) error {
 				} else {
 					bodyBytes = rewritten
 				}
+			} else {
+				stripped := bytes.ReplaceAll(bodyBytes, []byte("href=\"/"), []byte("href=\""))
+				stripped = bytes.ReplaceAll(stripped, []byte("src=\"/"), []byte("src=\""))
+				stripped = bytes.ReplaceAll(stripped, []byte("url(/"), []byte("url("))
+				bodyBytes = stripped
 			}
 		}
 
