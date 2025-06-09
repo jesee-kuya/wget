@@ -29,7 +29,7 @@ func (l *Logger) Done(timestamp time.Time, url string) {
 // Start logs the start of a process with a timestamp.
 func (l *Logger) Start(url string, timestamp time.Time) {
 	fmt.Fprintf(l.Output, "start at %s\n", timestamp.Format("2006-01-02 15:04:05"))
-	//fmt.Fprintf(l.Output, "sending request, awaiting response... ")
+	// fmt.Fprintf(l.Output, "sending request, awaiting response... ")
 }
 
 // SavingTo logs the path where the file is being saved.
@@ -56,9 +56,8 @@ func (l *Logger) Status(code int) {
 func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration) {
 	const barWidth = 30
 
-	toKiB := func(b int64) float64 { return float64(b) / 1024.0 }
-	writtenKiB := toKiB(written)
 	speedStr := util.FormatSpeed(speed)
+	writtenSize := util.ContentSize(written)
 
 	if total <= 0 {
 		progressIndex := int(written/10240) % barWidth
@@ -71,8 +70,8 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 			}
 		}
 		progressLine := fmt.Sprintf(
-			"%.2f KiB / ??.?? KiB [%s]   ??%% %s ETA: ?",
-			writtenKiB,
+			"%s / ??.?? [%s]   ??%% %s ETA: ?",
+			writtenSize,
 			string(bar),
 			speedStr,
 		)
@@ -85,7 +84,7 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 		return
 	}
 
-	totalKiB := toKiB(total)
+	totalSize := util.ContentSize(total)
 	percent := float64(written) / float64(total)
 	doneBars := int(percent * float64(barWidth))
 	if doneBars > barWidth {
@@ -97,9 +96,9 @@ func (l *Logger) Progress(written, total int64, speed float64, eta time.Duration
 	remainingBars := barWidth - doneBars
 
 	progressLine := fmt.Sprintf(
-		"%.2f KiB / %.2f KiB [%s%s] %6.2f%% %s %s",
-		writtenKiB,
-		totalKiB,
+		"%s / %s [%s%s] %6.2f%% %s %s",
+		writtenSize,
+		totalSize,
 		strings.Repeat("=", doneBars),
 		strings.Repeat(" ", remainingBars),
 		percent*100,
